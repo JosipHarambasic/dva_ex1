@@ -82,11 +82,12 @@ pick the one most attractive to you.
 """
 import typing
 
+import numpy as np
 import pandas as pd
 from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, Select
-from bokeh.plotting import figure, curdoc
-
+from bokeh.models import ColumnDataSource, Select, CustomJS
+from bokeh.plotting import figure, curdoc, show
+from bokeh.models.tools import HoverTool
 
 '''
 ######################################################################
@@ -104,8 +105,6 @@ IMPORTANT: RENAME THIS FILE to dva_ex_1_firstname_lastname.py
 In this first section, it is your job to prepare the datasets to be visualized.
 '''
 
-
-
 # Load the datasets
 df_sleep = pd.read_csv("mammals_sleep.csv")
 df_predation = pd.read_csv("mammals_predation.csv")
@@ -115,8 +114,8 @@ df_predation = pd.read_csv("mammals_predation.csv")
 #       Real-world datasets typically contain mistakes, typos, NaNs and other problems we have to deal with
 #       Try to spot them early!
 
-#print(df_sleep.dropna(axis="rows"))
-#print(df_predation.dropna(axis="rows"))
+# print(df_sleep.dropna(axis="rows"))
+# print(df_predation.dropna(axis="rows"))
 # (0.1) In both datasets, drop all rows where the species in nan                                (please keep this line)
 # TODO Here comes your code
 df_sleep = df_sleep.dropna(axis="rows")
@@ -128,7 +127,7 @@ df_combined = df_sleep.set_index("species").join(df_predation.set_index("Species
 ##print(df_combined)
 # (0.1) Remove all species where the body_wt is larger than 1000kg from the combined dataset    (please keep this line)
 bigger = df_combined[df_combined["body_wt"] > 1000]
-print(bigger)
+# print(bigger)
 
 
 # (0.2) Rename all columns such that they do not contain any                                    (please keep this line)
@@ -136,11 +135,11 @@ print(bigger)
 # eg. "Peter pan" -> "peter_pan"
 # TODO Here comes your code
 for i in list(df_combined):
+    df_combined.rename(columns={i: i.lower()}, inplace=True)
     if " " in i:
         df_combined.rename(columns={i: i.replace(" ", "_")}, inplace=True)
-    df_combined.rename(columns={i: i.lower()}, inplace=True)
 
-print(df_combined)
+print(list(df_combined))
 """
 ######################################
 (1.5 Points) Section 2: Visualization
@@ -162,7 +161,7 @@ and returns a new dataset with the corresponding values as x and y coordinates.
 
 
 # (0.5 Points) Implement the fetch_data function according to it's docstrings                   (please keep this line)
-def fetch_data(x_column_name:str, y_column_name:str):
+def fetch_data(x_column_name: str, y_column_name: str):
     """
     (0.3 Points) Given two column names, this function returns a dictionary with
     - (xs): a list of x-coordinates
@@ -172,29 +171,43 @@ def fetch_data(x_column_name:str, y_column_name:str):
     (0.2 Points) Ensures, the result does not contain any NaNs
     """
     # TODO Here comes your code
+    xs = df_combined[x_column_name].values.tolist()
+    ys = df_combined[y_column_name].values.tolist()
+    species = df_combined.index.values.tolist()
 
-    # xs =
-    # ys =
-    # species =
-    return dict(xs = xs, ys = ys, species=species)
+    # Check if the values have a NaN or are empty or datavalue does not fit
+    xs = [x for x in xs if pd.notnull(x) and x != ""]
+    ys = [y for y in ys if pd.notnull(y) and y != ""]
+    return dict(xs=xs, ys=ys, species=species)
 
 
 # (0.2 Points) Create a ColumnDataSource with the data from fetch_data()                        (please keep this line)
 # You can use any columns you want as the initial values
 
 # TODO Here comes your code
-# source = ColumnD......
-
+x_val, y_val = "body_wt", "brain_wt"
+source = ColumnDataSource(data=fetch_data(x_val, y_val))
 
 # (0.2 Points) Create a figure with log axes, set initial axis labels correctly based            (please keep this line)
 # on the previous step
 # (0.1 Points) add tooltips with the species names, x and y coordinates                          (please keep this line)
 # TODO Here comes your code
-# plot = ...
+p = figure(
+    x_axis_label=x_val,
+    y_axis_label=y_val
+)
 
+hover = HoverTool()
+hover.tooltips = [
+    ("Species", "@species"),
+    ("x", "@xs"),
+    ("y", "@ys")
+]
+p.add_tools(hover)
 
 # (0.1 Points) Create a circle glyph and bind it to the ColumnDataSource created previously      (please keep this line)
 # TODO Here comes your code
+p.circle(x='xs', y='ys', source=source)
 
 
 def callback(attr, old, new):
@@ -210,7 +223,9 @@ def callback(attr, old, new):
 
     """
     # TODO Here comes your code
-    pass
+    data = ColumnDataSource(data=fetch_data(old, new))
+    data.on_click(callback)
+
 
 # (0.3) Implement two Select Widgets and connect them to the callbacks                          (please keep this line)
 #       Remove "species" from the list
@@ -218,15 +233,17 @@ def callback(attr, old, new):
 # https://docs.bokeh.org/en/latest/docs/user_guide/interaction/widgets.html
 
 # TODO Here comes your code
-# select_xaxis = ...
-# select_yaxis = ...
-
+select_xaxis = Select(title="X - Axis", value=x_val, options=list(df_combined))
+select_yaxis = Select(title="Y - Axis", value=y_val, options=list(df_combined))
 
 # (0.1 Point) Add everything to the layout                                                      (please keep this line)
 lt = layout(
-    # ...
-)
+    select_xaxis,
+    select_yaxis,
+    p,
 
+)
+show(lt)
 # needs to be out commented
-#curdoc().add_root(lt)
-#curdoc().title = 'dva_ex1'
+# curdoc().add_root(lt)
+# curdoc().title = 'dva_ex1'
