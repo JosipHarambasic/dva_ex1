@@ -223,8 +223,9 @@ def callback(attr, old, new):
 
     """
     # TODO Here comes your code
-    data = ColumnDataSource(data=fetch_data(old, new))
-    data.on_click(callback)
+    source.data = fetch_data(select_xaxis.value, select_yaxis.value)
+    p.xaxis.axis_label = select_xaxis.value
+    p.yaxis.axis_label = select_yaxis.value
 
 
 # (0.3) Implement two Select Widgets and connect them to the callbacks                          (please keep this line)
@@ -235,7 +236,8 @@ def callback(attr, old, new):
 # TODO Here comes your code
 select_xaxis = Select(title="X - Axis", value=x_val, options=list(df_combined))
 select_yaxis = Select(title="Y - Axis", value=y_val, options=list(df_combined))
-
+select_xaxis.on_change("value", callback)
+select_yaxis.on_change("value", callback)
 # (0.1 Point) Add everything to the layout                                                      (please keep this line)
 lt = layout(
     select_xaxis,
@@ -243,7 +245,7 @@ lt = layout(
     p,
 
 )
-show(lt)
+# show(lt)
 # needs to be out commented
-# curdoc().add_root(lt)
-# curdoc().title = 'dva_ex1'
+curdoc().add_root(lt)
+curdoc().title = 'dva_ex1'
