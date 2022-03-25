@@ -126,9 +126,7 @@ df_predation = df_predation.dropna(axis="rows")
 df_combined = df_sleep.set_index("species").join(df_predation.set_index("Species"))
 ##print(df_combined)
 # (0.1) Remove all species where the body_wt is larger than 1000kg from the combined dataset    (please keep this line)
-bigger = df_combined[df_combined["body_wt"] > 1000]
-# print(bigger)
-
+df_combined = df_combined[df_combined["body_wt"]<1000]
 
 # (0.2) Rename all columns such that they do not contain any                                    (please keep this line)
 # whitespaces and uppercase letters anymore
@@ -245,7 +243,7 @@ lt = layout(
     p,
 
 )
-# show(lt)
+
 # needs to be out commented
 curdoc().add_root(lt)
 curdoc().title = 'dva_ex1'
