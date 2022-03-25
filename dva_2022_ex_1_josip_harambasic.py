@@ -137,7 +137,6 @@ for i in list(df_combined):
     if " " in i:
         df_combined.rename(columns={i: i.replace(" ", "_")}, inplace=True)
 
-print(list(df_combined))
 """
 ######################################
 (1.5 Points) Section 2: Visualization
@@ -241,7 +240,6 @@ lt = layout(
     select_xaxis,
     select_yaxis,
     p,
-
 )
 
 # needs to be out commented
